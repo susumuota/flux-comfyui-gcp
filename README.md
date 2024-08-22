@@ -118,15 +118,19 @@ bash scripts/local/ssh_gcp_instance.sh
 Confirm the contents of [`scripts/remote/install_python.sh`](scripts/remote/install_python.sh).
 
 On the remote instance, run the following commands.
-`tmux` is optional, but I strongly recommend using it to recover the session if the connection is accidentally lost.
 
 ```bash
-tmux
 bash flux-comfyui-gcp/scripts/remote/install_python.sh
 python -V  # Python 3.10.12
 ```
 
-If the connection is lost, ssh into the instance again and run `tmux a` to recover the session.
+I strongly recommend using `tmux` to recover the session if the connection is accidentally lost.
+
+```bash
+tmux
+```
+
+If the connection is lost, ssh into the instance again and run `tmux a` to recover the previous session.
 
 ```bash
 bash scripts/local/ssh_gcp_instance.sh
@@ -195,7 +199,7 @@ Now, open a web browser on the local machine and access [`http://localhost:8188/
 
 On the remote instance, open a new tmux window by pressing `Ctrl-j` and then `c`. (default key bindings is `Ctrl-b` instead of `Ctrl-j`). Or you can open a new terminal on the local machine and ssh into the remote instance again.
 
-Confirm the contents of [`scripts/remote/rsync_remote.sh`](scripts/remote/rsync_remote.sh) and [`scripts/local/rsync_local.sh`](scripts/local/rsync_local.sh). This script syncs the images from the remote instance to the local machine periodically.
+Confirm the contents of [`scripts/remote/rsync_remote.sh`](scripts/remote/rsync_remote.sh) and [`scripts/local/rsync_local.sh`](scripts/local/rsync_local.sh). This script periodically synchronizes the images from the remote instance to the local machine.
 
 On the remote instance, run the following command.
 
