@@ -32,7 +32,6 @@ On the local machine, run the following commands.
 
 ```bash
 git clone https://github.com/susumuota/flux-comfyui-gcp.git
-cd flux-comfyui-gcp
 ```
 
 ### Set environment variables
@@ -43,16 +42,27 @@ Edit [`scripts/local/set_envs.sh`](scripts/local/set_envs.sh) and set the `PROJE
 export PROJECT_ID="your-project-id"  # change to your project ID
 ```
 
-Choose the provisioning model. `SPOT` is cheaper but may be terminated unexpectedly. `STANDARD` is more stable but more expensive.
+Select the provisioning model. `SPOT` is cheaper but may be terminated unexpectedly. `STANDARD` is more stable but more expensive.
 
 ```bash
 export PROVISIONING_MODEL="SPOT"      # or "STANDARD"
 ```
 
+Select the machine type. I recommend to start with `g2-custom-8-55296` for NVIDIA L4 with 54GB RAM, then reduce the resources according to your usage.
+
+```bash
+# export MACHINE_TYPE="g2-standard-4"      # for NVIDIA L4 with 16GB RAM
+# export MACHINE_TYPE="g2-custom-4-32768"  # for NVIDIA L4 with 32GB RAM
+export MACHINE_TYPE="g2-custom-8-55296"  # for NVIDIA L4 with 54GB RAM
+# export MACHINE_TYPE="n1-standard-4"      # for NVIDIA T4 with 15GB RAM
+```
+
+<img alt="cost" src="https://github.com/user-attachments/assets/09b0aee0-37d8-47d9-8b2b-cd0431ef494b" width="600">
+
 Then, run the following command to set the environment variables.
 
 ```bash
-source scripts/local/set_envs.sh
+source flux-comfyui-gcp/scripts/local/set_envs.sh
 ```
 
 ### Create a bucket to copy images from the remote instance to the local machine
@@ -79,7 +89,7 @@ dst="gs://flux-outputs-1/output"  # edit here
 Confirm the contents of [`scripts/local/create_gcp_instance.sh`](scripts/local/create_gcp_instance.sh) and then run the following command to create an instance.
 
 ```bash
-bash scripts/local/create_gcp_instance.sh
+bash flux-comfyui-gcp/scripts/local/create_gcp_instance.sh
 ```
 
 ### SSH into the instance
@@ -87,12 +97,12 @@ bash scripts/local/create_gcp_instance.sh
 Confirm the contents of [`scripts/local/ssh_gcp_instance.sh`](scripts/local/ssh_gcp_instance.sh) and then run the following command to ssh into the instance with port forwarding.
 
 ```bash
-bash scripts/local/ssh_gcp_instance.sh
+bash flux-comfyui-gcp/scripts/local/ssh_gcp_instance.sh
 ```
 
 ### Setup the instance
 
-Confirm the contents of [`scripts/remote/create_dot_files.sh`](scripts/remote/create_dot_files.sh) and [`scripts/remote/install_cuda_drivers.sh`](scripts/remote/install_cuda_drivers.sh).
+Confirm the contents of [`scripts/remote/create_dot_files.sh`](scripts/remote/create_dot_files.sh), [`scripts/remote/create_swap.sh`](scripts/remote/create_swap.sh) and [`scripts/remote/install_cuda_drivers.sh`](scripts/remote/install_cuda_drivers.sh).
 
 On the **remote instance** (not the local machine), run the following commands.
 
@@ -101,6 +111,9 @@ git clone https://github.com/susumuota/flux-comfyui-gcp.git
 
 # create dot files for several commands. customize them if necessary.
 bash flux-comfyui-gcp/scripts/remote/create_dot_files.sh
+
+# create a swap file. adjust the size `32g` if necessary.
+bash flux-comfyui-gcp/scripts/remote/create_swap.sh
 
 # install CUDA drivers. this takes a few minutes.
 # if you want to reboot just after the installation, append "&& sudo reboot" to the command.
@@ -112,7 +125,7 @@ Wait for a few minutes and then ssh into the instance again.
 On the local machine, run the following command.
 
 ```bash
-bash scripts/local/ssh_gcp_instance.sh
+bash flux-comfyui-gcp/scripts/local/ssh_gcp_instance.sh
 ```
 
 Confirm the contents of [`scripts/remote/install_python.sh`](scripts/remote/install_python.sh).
@@ -124,6 +137,8 @@ bash flux-comfyui-gcp/scripts/remote/install_python.sh
 python -V  # Python 3.10.12
 ```
 
+### Optional: Use tmux
+
 I strongly recommend using `tmux` to recover the session if the connection is accidentally lost.
 
 ```bash
@@ -133,7 +148,7 @@ tmux
 If the connection is lost, ssh into the instance again and run `tmux a` to recover the previous session.
 
 ```bash
-bash scripts/local/ssh_gcp_instance.sh
+bash flux-comfyui-gcp/scripts/local/ssh_gcp_instance.sh
 tmux a  # to attach the session
 ```
 
@@ -169,7 +184,6 @@ Now, run the following commands on the remote instance.
 
 ```bash
 cd ComfyUI
-
 source env/bin/activate
 
 pip install hf_transfer
@@ -179,7 +193,8 @@ huggingface-cli login   # enter the token generated above
 huggingface-cli whoami  # confirm the login
 
 # this command should work without authentication error
-HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download black-forest-labs/FLUX.1-dev flux1-dev.safetensors --repo-type=model --local-dir="models/unet" --local-dir-use-symlinks=False
+HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download black-forest-labs/FLUX.1-dev flux1-dev.safetensors --repo-type=model --local-dir="models/unet"
+rm -rf models/unet/.cache
 
 deactivate
 cd ..
@@ -212,7 +227,7 @@ On the local machine, run the following command.
 
 ```bash
 # generated images will be copied from "gs://flux-outputs-1" bucket to local "output" directory
-bash scripts/local/rsync_local.sh
+bash flux-comfyui-gcp/scripts/local/rsync_local.sh
 ```
 
 ### Delete the instance
@@ -222,7 +237,7 @@ If you finish using the instance, you must delete it to avoid unnecessary charge
 Confirm the contents of [`scripts/local/delete_gcp_instance.sh`](scripts/local/delete_gcp_instance.sh) and then run the following command.
 
 ```bash
-bash scripts/local/delete_gcp_instance.sh
+bash flux-comfyui-gcp/scripts/local/delete_gcp_instance.sh
 ```
 
 Press `y` to confirm the deletion.

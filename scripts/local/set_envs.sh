@@ -3,9 +3,10 @@
 export PROJECT_ID="your-project-id"  # change to your project ID
 export ZONE="us-central1-a"
 export INSTANCE_NAME="instance-1"
-# export MACHINE_TYPE="g2-standard-4"      # for NVIDIA L4
-export MACHINE_TYPE="g2-custom-4-32768"  # for NVIDIA L4 with 32GB RAM
-# export MACHINE_TYPE="n1-standard-4"      # for NVIDIA T4
+# export MACHINE_TYPE="g2-standard-4"      # for NVIDIA L4 with 16GB RAM
+# export MACHINE_TYPE="g2-custom-4-32768"  # for NVIDIA L4 with 32GB RAM
+export MACHINE_TYPE="g2-custom-8-55296"  # for NVIDIA L4 with 54GB RAM
+# export MACHINE_TYPE="n1-standard-4"      # for NVIDIA T4 with 15GB RAM
 export SCOPES="default,storage-full"
 export IMAGE_PROJECT="ubuntu-os-cloud"
 export IMAGE_FAMILY="ubuntu-2204-lts"
