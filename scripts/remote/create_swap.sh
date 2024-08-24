@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# https://help.ubuntu.com/community/SwapFaq
+
 cat /proc/swaps
 
 sudo fallocate -l 32g /swapfile
