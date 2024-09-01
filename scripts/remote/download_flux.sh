@@ -12,9 +12,12 @@ aria2c -x 5 "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/ma
 aria2c -x 5 "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors" -d "models/vae" -o "ae.safetensors"
 
 # unet original
+#
 # flux1-dev needs to be authenticated to download. see README.md for more information.
-# aria2c -x 5 "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors" -d "models/unet" -o "flux1-dev.safetensors"
-# flux1-schnell does not need to be authenticated.
+# huggingface-cli login
+# aria2c --header="Authorization: Bearer $(cat ~/.cache/huggingface/token)" -x 5 "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors" -d "models/unet" -o "flux1-dev.safetensors"
+#
+# flux1-schnell does not need to be authenticated. this should work.
 # aria2c -x 5 "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors" -d "models/unet" -o "flux1-schnell.safetensors"
 
 # unet fp8

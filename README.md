@@ -32,6 +32,7 @@ On the local machine, run the following commands.
 
 ```bash
 git clone https://github.com/susumuota/flux-comfyui-gcp.git
+cd flux-comfyui-gcp
 ```
 
 ### Set environment variables
@@ -42,19 +43,26 @@ Edit [`scripts/local/set_envs.sh`](scripts/local/set_envs.sh) and set the `PROJE
 export PROJECT_ID="your-project-id"  # change to your project ID
 ```
 
+Select the machine type. I recommend to start with `g2-custom-8-55296` for NVIDIA L4 with 54GB RAM, then reduce the resources according to your usage.
+
+```bash
+# export MACHINE_TYPE="g2-standard-4"      # for NVIDIA L4 with 16GB RAM, enough for GGUF settings
+# export MACHINE_TYPE="g2-custom-4-32768"  # for NVIDIA L4 with 32GB RAM, swap file needed for original flux1-dev.safetensors
+export MACHINE_TYPE="g2-custom-8-55296"  # for NVIDIA L4 with 54GB RAM, no swap file needed for original flux1-dev.safetensors
+# export MACHINE_TYPE="n1-standard-4"      # for NVIDIA T4 with 15GB RAM, maybe enough for GGUF settings
+```
+
+Select the accelerator type. `nvidia-l4` is recommended for the best performance. `nvidia-tesla-t4` may also work for GGUF settings.
+
+```bash
+export ACCELERATOR="nvidia-l4"        # for NVIDIA L4
+# export ACCELERATOR="nvidia-tesla-t4"  # for NVIDIA T4
+```
+
 Select the provisioning model. `SPOT` is cheaper but may be terminated unexpectedly. `STANDARD` is more stable but more expensive.
 
 ```bash
 export PROVISIONING_MODEL="SPOT"      # or "STANDARD"
-```
-
-Select the machine type. I recommend to start with `g2-custom-8-55296` for NVIDIA L4 with 54GB RAM, then reduce the resources according to your usage.
-
-```bash
-# export MACHINE_TYPE="g2-standard-4"      # for NVIDIA L4 with 16GB RAM
-# export MACHINE_TYPE="g2-custom-4-32768"  # for NVIDIA L4 with 32GB RAM
-export MACHINE_TYPE="g2-custom-8-55296"  # for NVIDIA L4 with 54GB RAM
-# export MACHINE_TYPE="n1-standard-4"      # for NVIDIA T4 with 15GB RAM
 ```
 
 <img alt="cost" src="https://github.com/user-attachments/assets/09b0aee0-37d8-47d9-8b2b-cd0431ef494b" width="600">
@@ -62,7 +70,7 @@ export MACHINE_TYPE="g2-custom-8-55296"  # for NVIDIA L4 with 54GB RAM
 Then, run the following command to set the environment variables.
 
 ```bash
-source flux-comfyui-gcp/scripts/local/set_envs.sh
+source scripts/local/set_envs.sh
 ```
 
 ### Create a bucket to copy images from the remote instance to the local machine
@@ -89,7 +97,7 @@ dst="gs://flux-outputs-1/output"  # edit here
 Confirm the contents of [`scripts/local/create_gcp_instance.sh`](scripts/local/create_gcp_instance.sh) and then run the following command to create an instance.
 
 ```bash
-bash flux-comfyui-gcp/scripts/local/create_gcp_instance.sh
+bash scripts/local/create_gcp_instance.sh
 ```
 
 ### SSH into the instance
@@ -97,7 +105,7 @@ bash flux-comfyui-gcp/scripts/local/create_gcp_instance.sh
 Confirm the contents of [`scripts/local/ssh_gcp_instance.sh`](scripts/local/ssh_gcp_instance.sh) and then run the following command to ssh into the instance with port forwarding.
 
 ```bash
-bash flux-comfyui-gcp/scripts/local/ssh_gcp_instance.sh
+bash scripts/local/ssh_gcp_instance.sh
 ```
 
 ### Setup the instance
@@ -108,16 +116,18 @@ On the **remote instance** (not the local machine), run the following commands.
 
 ```bash
 git clone https://github.com/susumuota/flux-comfyui-gcp.git
+cd flux-comfyui-gcp
 
 # create dot files for several commands. customize them if necessary.
-bash flux-comfyui-gcp/scripts/remote/create_dot_files.sh
+bash scripts/remote/create_dot_files.sh
 
 # create a swap file. adjust the size `32g` if necessary.
-bash flux-comfyui-gcp/scripts/remote/create_swap.sh
+# uncomment the following line if you don't have enough memory (less than 54GB) to run the original flux1-dev.safetensors.
+# bash scripts/remote/create_swap.sh
 
 # install CUDA drivers. this takes a few minutes.
 # if you want to reboot just after the installation, append "&& sudo reboot" to the command.
-bash flux-comfyui-gcp/scripts/remote/install_cuda_drivers.sh && sudo reboot
+bash scripts/remote/install_cuda_drivers.sh && sudo reboot
 ```
 
 Your SSH connection will be lost after the reboot.
@@ -125,7 +135,7 @@ Wait for a few minutes and then ssh into the instance again.
 On the local machine, run the following command.
 
 ```bash
-bash flux-comfyui-gcp/scripts/local/ssh_gcp_instance.sh
+bash scripts/local/ssh_gcp_instance.sh
 ```
 
 Confirm the contents of [`scripts/remote/install_python.sh`](scripts/remote/install_python.sh).
@@ -133,7 +143,7 @@ Confirm the contents of [`scripts/remote/install_python.sh`](scripts/remote/inst
 On the remote instance, run the following commands.
 
 ```bash
-bash flux-comfyui-gcp/scripts/remote/install_python.sh
+bash scripts/remote/install_python.sh
 python -V  # Python 3.10.12
 ```
 
@@ -148,7 +158,7 @@ tmux
 If the connection is lost, ssh into the instance again and run `tmux a` to recover the previous session.
 
 ```bash
-bash flux-comfyui-gcp/scripts/local/ssh_gcp_instance.sh
+bash scripts/local/ssh_gcp_instance.sh
 tmux a  # to attach the session
 ```
 
@@ -157,7 +167,7 @@ tmux a  # to attach the session
 Confirm the contents of [`scripts/remote/install_comfyui.sh`](scripts/remote/install_comfyui.sh). This script installs ComfyUI and some custom nodes. If you want to change CUDA version or other settings, edit it.
 
 ```bash
-bash flux-comfyui-gcp/scripts/remote/install_comfyui.sh
+bash scripts/remote/install_comfyui.sh
 ```
 
 ### Download Flux.1 files
@@ -165,7 +175,7 @@ bash flux-comfyui-gcp/scripts/remote/install_comfyui.sh
 Confirm the contents of [`scripts/remote/download_flux.sh`](scripts/remote/download_flux.sh). This script downloads the Flux.1 files. Edit it if necessary.
 
 ```bash
-bash flux-comfyui-gcp/scripts/remote/download_flux.sh
+bash scripts/remote/download_flux.sh
 ```
 
 ### Optional: Download the original `flux1-dev.safetensors`
@@ -176,9 +186,9 @@ You have to accept the conditions to access its files and the contents.
 
 - https://huggingface.co/black-forest-labs/FLUX.1-dev
 
-Then, generate a read-only token for `huggingface-cli login`.
+Then, generate a read-only token to download the file.
 
-- https://huggingface.co/settings/tokens
+- https://huggingface.co/settings/tokens/new?tokenType=read
 
 Now, run the following commands on the remote instance.
 
@@ -186,15 +196,11 @@ Now, run the following commands on the remote instance.
 cd ComfyUI
 source env/bin/activate
 
-pip install hf_transfer
-pip install "huggingface_hub[hf_transfer]"
+pip install "huggingface_hub[cli]"
 
 huggingface-cli login   # enter the token generated above
-huggingface-cli whoami  # confirm the login
 
-# this command should work without authentication error
-HF_HUB_ENABLE_HF_TRANSFER=1 huggingface-cli download black-forest-labs/FLUX.1-dev flux1-dev.safetensors --repo-type=model --local-dir="models/unet"
-rm -rf models/unet/.cache
+aria2c --header="Authorization: Bearer $(cat ~/.cache/huggingface/token)" -x 5 "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors" -d "models/unet" -o "flux1-dev.safetensors"
 
 deactivate
 cd ..
@@ -205,7 +211,7 @@ cd ..
 Confirm the contents of [`scripts/remote/run_comfyui.sh`](scripts/remote/run_comfyui.sh).
 
 ```bash
-bash flux-comfyui-gcp/scripts/remote/run_comfyui.sh
+bash scripts/remote/run_comfyui.sh
 ```
 
 Now, open a web browser on the local machine and access [`http://localhost:8188/`](http://localhost:8188/).
@@ -220,14 +226,14 @@ On the remote instance, run the following command.
 
 ```bash
 # generated images will be copied to from remote "output" directory to "gs://flux-outputs-1" bucket
-bash flux-comfyui-gcp/scripts/remote/rsync_remote.sh
+bash scripts/remote/rsync_remote.sh
 ```
 
 On the local machine, run the following command.
 
 ```bash
 # generated images will be copied from "gs://flux-outputs-1" bucket to local "output" directory
-bash flux-comfyui-gcp/scripts/local/rsync_local.sh
+bash scripts/local/rsync_local.sh
 ```
 
 ### Delete the instance
@@ -237,7 +243,7 @@ If you finish using the instance, you must delete it to avoid unnecessary charge
 Confirm the contents of [`scripts/local/delete_gcp_instance.sh`](scripts/local/delete_gcp_instance.sh) and then run the following command.
 
 ```bash
-bash flux-comfyui-gcp/scripts/local/delete_gcp_instance.sh
+bash scripts/local/delete_gcp_instance.sh
 ```
 
 Press `y` to confirm the deletion.
